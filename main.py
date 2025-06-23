@@ -41,9 +41,10 @@ app.add_middleware(
 # Montar archivos estáticos
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Configuración del sistema
+# Configuración del sistema desde variables de entorno
 RECOGNITION_THRESHOLD = float(os.getenv("FACE_RECOGNITION_THRESHOLD", "4000"))
 ALERT_ENABLED = os.getenv("ALERT_ENABLED", "true").lower() == "true"
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/facerecon")
 
 # Asegurar que el directorio de fotos existe
 FOTOS_DIR = "static/fotos_perfil"
@@ -86,11 +87,6 @@ async def create_user(
     if existing_user:
         raise HTTPException(status_code=400, detail="El email ya existe")
     
-    # Generar nombre único para la imagen
-    file_extension = os.path.splitext(foto.filename)[1]
-    unique_filename = f"{uuid.uuid4()}{file_extension}"
-    foto_path = os.path.join(FOTOS_DIR, unique_filename)
-    
     # Guardar imagen temporalmente para procesamiento
     with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
         content = await foto.read()
@@ -103,10 +99,7 @@ async def create_user(
         if embedding is None:
             raise HTTPException(status_code=400, detail="No se pudo detectar un rostro en la imagen")
         
-        # Guardar la imagen en el directorio estático
-        shutil.copy2(tmp_file_path, foto_path)
-        
-        # Crear usuario en la base de datos
+        # Crear usuario en la base de datos primero para obtener el ID
         user = User(
             name=f"{nombre} {apellido}",
             email=email,
@@ -118,6 +111,13 @@ async def create_user(
         db.commit()
         db.refresh(user)
         
+        # Generar nombre de archivo usando el ID del usuario
+        foto_filename = f"{user.id}.jpg"
+        foto_path = os.path.join(FOTOS_DIR, foto_filename)
+        
+        # Guardar la imagen en el directorio estático
+        shutil.copy2(tmp_file_path, foto_path)
+        
         return {
             "id": str(user.id), 
             "nombre": nombre,
@@ -125,7 +125,7 @@ async def create_user(
             "email": user.email,
             "telefono": user.telefono,
             "requisitoriado": user.requested,
-            "url_foto": f"/static/fotos_perfil/{unique_filename}",
+            "url_foto": f"/static/fotos_perfil/{foto_filename}",
             "message": "Usuario creado exitosamente"
         }
     
@@ -154,7 +154,7 @@ def get_users(
             "email": user.email,
             "telefono": user.telefono,
             "requisitoriado": user.requested,
-            "url_foto": f"/static/fotos_perfil/{user.id}{os.path.splitext(user.name)[1] if user.name else '.jpg'}",
+            "url_foto": f"/static/fotos_perfil/{user.id}.jpg",
             "created_at": user.created_at.isoformat() if user.created_at else None
         } 
         for user in users
@@ -181,7 +181,7 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
         "email": user.email,
         "telefono": user.telefono,
         "requisitoriado": user.requested,
-        "url_foto": f"/static/fotos_perfil/{user.id}{os.path.splitext(user.name)[1] if user.name else '.jpg'}",
+        "url_foto": f"/static/fotos_perfil/{user.id}.jpg",
         "created_at": user.created_at.isoformat() if user.created_at else None,
         "updated_at": user.updated_at.isoformat() if user.updated_at else None
     }
@@ -372,7 +372,8 @@ async def recognize_face(
                     "apellido": " ".join(best_match.name.split()[1:]) if best_match.name and len(best_match.name.split()) > 1 else "",
                     "email": best_match.email,
                     "telefono": best_match.telefono,
-                    "requisitoriado": best_match.requested
+                    "requisitoriado": best_match.requested,
+                    "url_foto": f"/static/fotos_perfil/{best_match.id}.jpg"
                 },
                 "confidence": 1.0 / (1.0 + best_distance),
                 "distance": best_distance,
@@ -406,6 +407,7 @@ def get_alerts(db: Session = Depends(get_db)):
             "apellido": " ".join(user.name.split()[1:]) if user.name and len(user.name.split()) > 1 else "",
             "email": user.email,
             "telefono": user.telefono,
+            "url_foto": f"/static/fotos_perfil/{user.id}.jpg",
             "created_at": user.created_at.isoformat() if user.created_at else None
         }
         for user in requested_users
