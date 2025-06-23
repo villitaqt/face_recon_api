@@ -345,6 +345,9 @@ async def recognize_face(
         # Umbral de similitud (ajustar según necesidad)
         threshold = RECOGNITION_THRESHOLD
         print(f"[DEBUG] Mejor distancia encontrada: {best_distance}, Umbral: {threshold}")
+        if best_match:
+            print(f"[DEBUG] Usuario best_match: id={best_match.id}, name={best_match.name}")
+        print(f"[DEBUG] Reconocido? {best_match is not None and best_distance < threshold}")
         
         if best_match and best_distance < threshold:
             # Verificar si el usuario está marcado como "requisitoriado"
@@ -362,7 +365,7 @@ async def recognize_face(
                 )
             
             return {
-                "recognized": True,
+                "success": True,
                 "user": {
                     "id": str(best_match.id), 
                     "nombre": best_match.name.split()[0] if best_match.name else "",
@@ -378,7 +381,7 @@ async def recognize_face(
             }
         else:
             return {
-                "recognized": False,
+                "success": False,
                 "message": "Rostro no reconocido",
                 "distance": best_distance if best_match else None,
                 "alert_triggered": False
