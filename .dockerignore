@@ -1,0 +1,103 @@
+# Archivos de desarrollo
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos de Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Archivos de Git
+.git/
+.gitignore
+
+# Archivos de documentación
+README.md
+*.md
+
+# Archivos de pruebas
+test_*.py
+*_test.py
+
+# Archivos de configuración local
+.env
+.env.local
+
+# Archivos de datos temporales (se recrearán en producción)
+data/initial_enrollment/
+static/fotos_perfil/
+models/pca_model.pkl
+
+# Python
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Virtual environments
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+
+# Documentation
+docs/
+
+# Test files (keep only necessary ones)
+test_images/
+*.test.py 

@@ -1,19 +1,27 @@
 services:
   - type: web
     name: facerecon-api
-    env: python
-    plan: starter
-    pythonVersion: "3.11"
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    env: docker
+    image: tu_usuario_dockerhub/facerecon-api:latest
+    port: 8000
     envVars:
       - key: DATABASE_URL
-        value: postgresql://villitaqt:VIwhRET7lfwuyggiYPU7KERwqorA1ndH@dpg-d1cpf86r433s7384v5hg-a.oregon-postgres.render.com/face_recon_db
+        fromDatabase:
+          name: facerecon-db
+          property: connectionString
       - key: FACE_RECOGNITION_THRESHOLD
         value: 4000
       - key: ALERT_ENABLED
         value: true
+    healthCheckPath: /health
+    autoDeploy: true
     disk:
       name: facerecon-images
-      mountPath: /opt/render/project/src/static/fotos_perfil
+      mountPath: /app/static/fotos_perfil
       sizeGB: 1
+
+databases:
+  - name: facerecon-db
+    databaseName: facerecon
+    user: facerecon
+    plan: free

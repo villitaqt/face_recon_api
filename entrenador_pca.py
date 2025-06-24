@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 # Importamos la función de pre-procesamiento de nuestro módulo
 from facial_preprocesador import preprocesar_cara 
 
-def entrenar_modelo_pca(directorio_datos, ruta_modelo_salida, n_componentes=150):
+def entrenar_modelo_pca(directorio_datos, ruta_modelo_salida, n_componentes=33):
     """
     Entrena un modelo PCA a partir de las imágenes en un directorio y lo guarda.
 

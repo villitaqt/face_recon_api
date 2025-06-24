@@ -494,9 +494,25 @@ def log_alert(user_id: str, user_name: str, email: str, telefono: str, confidenc
 @app.on_event("startup")
 async def startup_event():
     """
-    Inicializar la base de datos al arrancar la aplicación.
+    Inicializar la base de datos y el modelo PCA al arrancar la aplicación.
     """
+    print("🚀 Iniciando aplicación de reconocimiento facial...")
+    
+    # Crear tablas de base de datos
     create_db_tables()
+    print("✅ Base de datos inicializada")
+    
+    # Inicializar modelo PCA si no existe
+    try:
+        from init_model import init_model
+        if init_model():
+            print("✅ Modelo PCA inicializado")
+        else:
+            print("⚠️  Error inicializando modelo PCA")
+    except Exception as e:
+        print(f"⚠️  Error durante inicialización del modelo: {e}")
+    
+    print("🎯 Aplicación lista para recibir requests")
 
 @app.get("/debug/distances", tags=["Debug"])
 def debug_distance_matrix(db: Session = Depends(get_db)):

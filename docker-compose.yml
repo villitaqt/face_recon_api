@@ -1,18 +1,21 @@
 # docker-compose.yml
 version: '3.8'
-services:
-  db:
-    image: pgvector/pgvector:pg16
-    container_name: postgres_db_facial
-    restart: always
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_DB=reconocimiento_facial_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
 
-volumes:
-  postgres_data:
+services:
+  facerecon-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@host.docker.internal:5432/reconocimiento_facial_db
+      - FACE_RECOGNITION_THRESHOLD=4000
+      - ALERT_ENABLED=true
+    volumes:
+      - ./static/fotos_perfil:/app/static/fotos_perfil
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

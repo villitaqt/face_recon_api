@@ -1,0 +1,43 @@
+# Dockerfile.prod - Optimizado para producción
+FROM python:3.11-slim
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Copiar requirements primero para aprovechar cache de Docker
+COPY requirements.txt .
+
+# Instalar dependencias de Python
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar todo el código de la aplicación
+COPY . .
+
+# Crear directorios necesarios
+RUN mkdir -p /app/static/fotos_perfil /app/models /app/data/initial_enrollment
+
+# Asegurar que el modelo PCA robusto esté presente
+# Si no existe, se entrenará al iniciar la aplicación
+RUN if [ ! -f /app/models/pca_model.pkl ]; then \
+    echo "Modelo PCA no encontrado. Se entrenará al iniciar la aplicación."; \
+    fi
+
+# Exponer puerto
+EXPOSE 8000
+
+# Variables de entorno para producción
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Comando de inicio
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"] 
